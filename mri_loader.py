@@ -21,21 +21,18 @@ class DataLoaderMRILoc:
         
         # Format of the image (Bool)
         self.channels_first = channels_first
+        
+        # Desired shape of the volume along with the opposite
+        # This would check for both channel first and channel last images and convert them to the specified format
+        self.desired_shape = (self.channels, self.height, self.width) if self.channels_first else (self.height, self.width, self.channels)
+        self.desired_shape_opposite = (self.height, self.width, self.channels) if self.channels_first else (self.channels, self.height, self.width)
 
     def get_data(self):
         
         # List files in directory
         files = os.listdir(self.directory)
-
-        # Desired shape of the volume along with the opposite
-        # This would check for both channel first and channel last images and convert them to the specified format
-        if self.channels_first:
-            desired_shape = (self.channels, self.height, self.width)
-            desired_shape_opposite = (self.height, self.width, self.channels)
-        else:
-            desired_shape = (self.height, self.width, self.channels)
-            desired_shape_opposite = (self.channels, self.height, self.width)
-       
+        
+        # Collect all numpy arrays
         X = []
         
         # Names of files whose shape is other than the desired shape (except channel positions)
@@ -45,8 +42,8 @@ class DataLoaderMRILoc:
 
             image = nib.load(os.path.join(self.directory, file)).get_fdata()
 
-            if image.shape != desired_shape:
-                if image.shape == desired_shape_opposite:
+            if image.shape != self.desired_shape:
+                if image.shape == self.desired_shape_opposite:
                     if self.channels_first:
                         X.append(np.moveaxis(image, -1, 0))
                     else:
